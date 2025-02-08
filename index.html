@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Trial Room</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .avatar-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            margin: 0 auto;
+        }
+        .clothing-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        @media (max-width: 640px) {
+            .avatar-container {
+                width: 250px;
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">Virtual Trial Room</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h2 class="text-xl font-semibold mb-4">1. Choose Avatar</h2>
+                    <input type="file" id="avatarInput" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold mb-4">2. Choose Clothing</h2>
+                    <input type="file" id="clothingInput" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="avatar-container bg-gray-100 rounded-lg">
+                    <img id="avatarPreview" class="w-full h-full object-contain" src="https://via.placeholder.com/300x400?text=Select+Avatar" alt="Avatar Preview"/>
+                    <img id="clothingPreview" class="clothing-item" src="" alt="Clothing Preview"/>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold mb-2">Adjust Size</h3>
+                        <input type="range" id="sizeControl" min="50" max="150" value="100" class="w-full"/>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold mb-2">Position</h3>
+                        <div class="controls">
+                            <button id="moveUp" class="p-2 bg-blue-100 rounded hover:bg-blue-200"><i class="bi bi-arrow-up"></i></button>
+                            <button id="moveDown" class="p-2 bg-blue-100 rounded hover:bg-blue-200"><i class="bi bi-arrow-down"></i></button>
+                            <button id="moveLeft" class="p-2 bg-blue-100 rounded hover:bg-blue-200"><i class="bi bi-arrow-left"></i></button>
+                            <button id="moveRight" class="p-2 bg-blue-100 rounded hover:bg-blue-200"><i class="bi bi-arrow-right"></i></button>
+                        </div>
+                    </div>
+
+                    <button id="tryOn" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
+                        Try On
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const avatarInput = document.getElementById('avatarInput');
+        const clothingInput = document.getElementById('clothingInput');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const clothingPreview = document.getElementById('clothingPreview');
+        const sizeControl = document.getElementById('sizeControl');
+        const tryOnButton = document.getElementById('tryOn');
+
+        let clothingPosition = { x: 0, y: 0 };
+        const STEP = 10;
+
+        // Handle avatar upload
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle clothing upload
+        clothingInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    clothingPreview.src = e.target.result;
+                    clothingPreview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Size control
+        sizeControl.addEventListener('input', function(e) {
+            const size = e.target.value;
+            clothingPreview.style.transform = `translate(${clothingPosition.x}px, ${clothingPosition.y}px) scale(${size/100})`;
+        });
+
+        // Position controls
+        document.getElementById('moveUp').addEventListener('click', () => {
+            clothingPosition.y -= STEP;
+            updatePosition();
+        });
+
+        document.getElementById('moveDown').addEventListener('click', () => {
+            clothingPosition.y += STEP;
+            updatePosition();
+        });
+
+        document.getElementById('moveLeft').addEventListener('click', () => {
+            clothingPosition.x -= STEP;
+            updatePosition();
+        });
+
+        document.getElementById('moveRight').addEventListener('click', () => {
+            clothingPosition.x += STEP;
+            updatePosition();
+        });
+
+        function updatePosition() {
+            const scale = sizeControl.value/100;
+            clothingPreview.style.transform = `translate(${clothingPosition.x}px, ${clothingPosition.y}px) scale(${scale})`;
+        }
+
+        // Try On button
+        tryOnButton.addEventListener('click', function() {
+            if (!avatarPreview.src.includes('placeholder') && clothingPreview.src) {
+                // Animation effect
+                clothingPreview.style.transition = 'all 0.3s ease-in-out';
+                updatePosition();
+            } else {
+                alert('Please select both an avatar and clothing item');
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
